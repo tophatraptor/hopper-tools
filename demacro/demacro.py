@@ -401,6 +401,8 @@ def gunzip_and_demacro((tarball, outDir, verbose, keep)):
     if inputFile == 'None':
         print 'no main file found for ' + tarball
         tar.close()
+	if not keep:
+	  shutil.rmtree(os.path.dirname(inputFile))
         return
 
     tar.close()
@@ -435,7 +437,7 @@ def main():
     # assume directory has tarballs
     if args.directory:
         tarballs = glob.glob(args.inputName + '/*.tar.gz')
-        pool     = multiprocessing.Pool(processes=4)
+        pool     = multiprocessing.Pool(processes=24)
         pool.map(gunzip_and_demacro, zip(tarballs, repeat(args.outputName), repeat(args.verbose), repeat(args.keep)))
     else:
         demacro(args.inputName, args.outputName, args.verbose)
