@@ -432,15 +432,19 @@ def main():
     parser.add_argument('-d', '--directory', action='store_true', help='indicates that inputFile is a directory of tarballs and outputFile is a directory')
     parser.add_argument('-v', '--verbose' , action='store_true', help='enable verbose mode')
     parser.add_argument('-k', '--keep' , action='store_true', help='keep untarred directories in output directory')
+    parser.add_argument('-o', '--oldConvention' , action='store_true', help='use this flag when applying demacro to submissions before 04/2007')
 
     args     = parser.parse_args()
     
 
     # assume directory has tarballs
     if args.directory:
+      if args.oldConvention:
+        tarballs = glob.glob(args.inputName + '/*/*.tar.gz')
+      else:
         tarballs = glob.glob(args.inputName + '/*.tar.gz')
-        pool     = multiprocessing.Pool(processes=24)
-        pool.map(gunzip_and_demacro, zip(tarballs, repeat(args.outputName), repeat(args.verbose), repeat(args.keep)))
+      pool     = multiprocessing.Pool(processes=24)
+      pool.map(gunzip_and_demacro, zip(tarballs, repeat(args.outputName), repeat(args.verbose), repeat(args.keep)))
     else:
         demacro(args.inputName, args.outputName, args.verbose)
 
