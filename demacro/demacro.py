@@ -388,7 +388,7 @@ def gunzip_and_demacro((tarball, outDir, verbose, keep)):
 
     # find main file
     inputFile = 'None'
-    for file in filter(lambda x: '.tex' in x, tar.getnames()):
+    for file in filter(lambda x: '.tex' in x or '.TEX' in x, [fn.replace('/./', '/') for fn in tar.getnames()]):
         fh = open(os.path.join(outDir,file), 'r')
         for line in fh:
             ## TODO: ignore commented lines
@@ -398,22 +398,24 @@ def gunzip_and_demacro((tarball, outDir, verbose, keep)):
                 break
         fh.close()
 
+    fileBase   = os.path.basename(tarball.replace('.tar.gz', '') + '.tex')
+    outputFile = os.path.join(outDir, fileBase)
+
     if inputFile == 'None':
         print 'no main file found for ' + tarball
         tar.close()
 	if not keep:
-	  shutil.rmtree(os.path.dirname(inputFile))
+	  shutil.rmtree(os.path.join(outDir, fileBase.replace('.tex','')))
         return
 
     tar.close()
 
-    fileBase   = os.path.basename(tarball.replace('.tar.gz', '') + '.tex')
-    outputFile = os.path.join(outDir, fileBase)
 
     #print "input = {}, output = {}".format(inputFile, outputFile)
 
     demacro(inputFile, outputFile, verbose)
     if not keep:
+      #print "deleting: {}".format(inputFile)
       shutil.rmtree(os.path.dirname(inputFile))
     return
         
