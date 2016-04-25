@@ -99,7 +99,7 @@ def decomposeTeX(inputDoc):
 	            decomposed_doc[-1] = decomposed_doc[-1] + decomment(current.strip())
 	return decomposed_doc, eqn_idx, text_idx
 
-def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir)):
+def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir, fullDoc)):
 	
 	# decompose LaTeX document
 	try:
@@ -116,6 +116,7 @@ def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir)):
 
 	WINDOW_SIZE = 200
 	eqn_number  = 1
+ 	full_text   = ''
 	for eidx in eqn_idx:
 		if eidx == 0:
 			text_above = ['']
@@ -145,7 +146,6 @@ def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir)):
 			text_below = text_below.split()[:WINDOW_SIZE]
 
 
-		paragraph = ' '.join(text_above + text_below)
 		#print len(paragraph.split())
 		# paragraph = paragraph.lower() # lower case
 		# paragraph = re.sub('\$.*?\$', '', paragraph) # remove inline math
@@ -155,25 +155,33 @@ def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir)):
 		# paragraph =	re.sub(r'\\[sub]*section\{.*?\}', '', paragraph) # remove other sections
 		#paragraph = re.sub(r"\\[a-b]*{*.*?}", '', paragraph) # remove things like \\cite{blah} [needs work]
 
-		if len(paragraph.split()) < 200:
-			continue
-		paragraph = paragraph.replace('.', ' . ')
-		paragraph = paragraph.replace('"', ' " ')
-		paragraph = paragraph.replace(',', ' , ')
-		paragraph = paragraph.replace('(', ' ( ')
-		paragraph = paragraph.replace(')', ' ) ')
-		paragraph = paragraph.replace('!', ' ! ')
-		paragraph = paragraph.replace('?', ' ? ')
-		paragraph = paragraph.replace(';', ' ; ')
-		paragraph = paragraph.replace(':', ' : ')
-
 		paragraph_id   = inputDoc + '_' + str(eqn_number)
-		line           = paragraph_id + ' ' + paragraph
-		p2v_doc.write(line + '\n')
+
+		if fullDoc:
+		  full_text = full_text + ' '.join(text_above + text_below)
+		else:
+		  paragraph = ' '.join(text_above + text_below)
+		  if len(paragraph.split()) < (WINDOW_SIZE/2.0):
+		    continue
+		  paragraph = paragraph.replace('.', ' . ')
+		  paragraph = paragraph.replace('"', ' " ')
+		  paragraph = paragraph.replace(',', ' , ')
+		  paragraph = paragraph.replace('(', ' ( ')
+		  paragraph = paragraph.replace(')', ' ) ')
+		  paragraph = paragraph.replace('!', ' ! ')
+		  paragraph = paragraph.replace('?', ' ? ')
+		  paragraph = paragraph.replace(';', ' ; ')
+		  paragraph = paragraph.replace(':', ' : ')
+		  paragraph_id   = inputDoc + '_' + str(eqn_number)
+		  line           = paragraph_id + ' ' + paragraph
+		  p2v_doc.write(line + '\n')
 
 		meta_data      = paragraph_id + '\t' + decomposed_doc[eidx].replace('\n', '')
 		p2v_meta.write(meta_data + '\n')
 		eqn_number += 1
+
+	if fullDoc:
+		p2v_doc.write(inputDoc + ' ' +  full_text + '\n')
 
 
 def main():
@@ -184,15 +192,16 @@ def main():
 	parser.add_argument('p2vDir', help = 'output directory')
 	parser.add_argument('p2v_metaDir', help = 'output directory')
 	parser.add_argument('-d', '--directory', action='store_true', help='indicates that inputFile is a directory tex files and outputFile is a directory')
+	parser.add_argument('-f', '--full', action='store_true', help='p2v file becomes one line with text from entire article')
 
 	args = parser.parse_args()
 
 	if args.directory:
 		doc_list = glob.glob(args.inputDoc + '/*.tex')
 		pool     = multiprocessing.Pool(processes=24)
-		pool.map(construct_p2v_data, zip(doc_list, repeat(args.p2vDir), repeat(args.p2v_metaDir)))
+		pool.map(construct_p2v_data, zip(doc_list, repeat(args.p2vDir), repeat(args.p2v_metaDir), repeat(args.full)))
 	else:
-		construct_p2v_data((args.inputDoc, args.p2vDir, args.p2v_metaDir))
+		construct_p2v_data((args.inputDoc, args.p2vDir, args.p2v_metaDir, args.full))
 
 	return
 
