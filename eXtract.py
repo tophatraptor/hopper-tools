@@ -10,8 +10,8 @@ from itertools import repeat
 def match_start(start):
     if re.search(r'begin', start):
         return re.sub(r'begin', 'end', start)
-    elif start == '\\[':
-        return '\\]'
+    elif start == r'\\[':
+        return r'\\]'
     elif start == r'\$\$':
         return r'\$\$'
     else:
@@ -121,7 +121,6 @@ def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir, fullDoc)):
 		if eidx == 0:
 			text_above = ['']
 		else:
-
 			text_above = ' '.join(decomposed_doc[eidx-1].strip().split())
 			text_above = text_above.lower() # lower case
 			text_above = re.sub('\$.*?\$', '', text_above) # remove inline math
@@ -145,20 +144,25 @@ def construct_p2v_data((inputDoc, p2vDir, p2v_metaDir, fullDoc)):
 
 			text_below = text_below.split()[:WINDOW_SIZE]
 
-
-		#print len(paragraph.split())
-		# paragraph = paragraph.lower() # lower case
-		# paragraph = re.sub('\$.*?\$', '', paragraph) # remove inline math
-		# paragraph =	re.sub(r'\\begin\{.*?\}.*?\\end\{.*?\}', '', paragraph) # remove other sections
-		# paragraph =	re.sub(r'.*?\\end\{.*?\}', '', paragraph) # possible that \begin is missing
-		# paragraph =	re.sub(r'\\begin\{.*?\}.*?', '', paragraph) # possible that \end is missing
-		# paragraph =	re.sub(r'\\[sub]*section\{.*?\}', '', paragraph) # remove other sections
-		#paragraph = re.sub(r"\\[a-b]*{*.*?}", '', paragraph) # remove things like \\cite{blah} [needs work]
-
 		paragraph_id   = inputDoc + '_' + str(eqn_number)
 
 		if fullDoc:
-		  full_text = full_text + ' '.join(text_above + text_below)
+                  if eidx == 0:
+                     continue
+                  elif eidx == eqn_idx[-1]:
+                    chunk   = ' '.join(text_above + text_below)
+                  else:
+                    chunk   = ' '.join(text_above)
+                  chunk   = chunk.replace('.', ' . ')
+                  chunk   = chunk.replace('"', ' " ')
+                  chunk   = chunk.replace(',', ' , ')
+                  chunk   = chunk.replace('(', ' ( ')
+                  chunk   = chunk.replace(')', ' ) ')
+                  chunk   = chunk.replace('!', ' ! ')
+                  chunk   = chunk.replace('?', ' ? ')
+                  chunk   = chunk.replace(';', ' ; ')
+                  chunk   = chunk.replace(':', ' : ')
+                  full_text = full_text + chunk 
 		else:
 		  paragraph = ' '.join(text_above + text_below)
 		  if len(paragraph.split()) < (WINDOW_SIZE/2.0):
@@ -195,12 +199,15 @@ def main():
 	parser.add_argument('-f', '--full', action='store_true', help='p2v file becomes one line with text from entire article')
 
 	args = parser.parse_args()
+        if args.full:
+          print "full-doc mode"
 
 	if args.directory:
 		doc_list = glob.glob(args.inputDoc + '/*.tex')
 		pool     = multiprocessing.Pool(processes=24)
 		pool.map(construct_p2v_data, zip(doc_list, repeat(args.p2vDir), repeat(args.p2v_metaDir), repeat(args.full)))
 	else:
+                print "single-threaded"
 		construct_p2v_data((args.inputDoc, args.p2vDir, args.p2v_metaDir, args.full))
 
 	return
