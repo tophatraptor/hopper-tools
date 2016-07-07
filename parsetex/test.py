@@ -33,7 +33,6 @@ c = re.findall(r'\\begin\{gather\}(.*?)\\end\{gather\}',text,re.DOTALL)
 d = re.findall(r'\\begin\{align\}(.*?)\\end\{align\}',text,re.DOTALL)
 e = re.findall(r'\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',text,re.DOTALL)
 f = re.findall(r'\\begin\{math\}(.*?)\\end\{math\}',text,re.DOTALL)
-
 g = re.findall(r'[^\\]\\\[(.*?)\\\]',text,re.DOTALL)
 h = re.findall(r'\$\$([^\^].*?)\$\$',text,re.DOTALL)
 
@@ -41,8 +40,6 @@ l = re.findall(r'[^\\]\$(.*?)\$',text,re.DOTALL)
 m = re.findall(r'\\\((.*?)\\\)',text,re.DOTALL)
 
 net = [a,b,c,d,e,f,g,h,l,m]
-
-
 
 total = a+b+c+d+e+f+g+h+l+m
 total = map(strip,total)
@@ -57,10 +54,8 @@ newtext = re.sub(r'(?s)\\begin\{gather\}(.*?)\\end\{gather\}',cdelim + r'\1' + c
 newtext = re.sub(r'(?s)\\begin\{align\}(.*?)\\end\{align\}',cdelim + r'\1' + cdelim,newtext)
 newtext = re.sub(r'(?s)\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',cdelim + r'\1' + cdelim,newtext)
 newtext = re.sub(r'(?s)\\begin\{math\}(.*?)\\end\{math\}',cdelim + r'\1' + cdelim,newtext)
-
 newtext = re.sub(r'(?s)[^\\]\\\[(.*?)\\\]',cdelim + r'\1' + cdelim,newtext)
 newtext = re.sub(r'(?s)\$\$([^\^].*?)\$\$',cdelim + r'\1' + cdelim,newtext)
-
 newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
 newtext = re.sub(r'(?s)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
 
@@ -69,14 +64,21 @@ a = map(strip,a)
 
 print("HERE WE GO")
 
-count = 0
-for x in a:
-    if x in total:
-        count+=1
-    else:
-        print("DELIM")
-        print(x)
-print("Expected: {}\nActual: {}".format(len(total),count))
+for i in range(len(a)):
+    if a[i] in total:
+        a[i] = equation(a[i])
+        print(a[i].text)
+
+# count = 0
+
+#
+# for x in a:
+#     if x in total:
+#         count+=1
+#     else:
+#         print("DELIM")
+#         print(x)
+# print("Expected: {}\nActual: {}".format(len(total),count))
 
 
 for x in net:

@@ -56,11 +56,11 @@ def proc(instr):
 
 #makes a dictionary of counted values
 def makedict(filename):
-    f1 = open(filename,'rt') #remove the errors bit for python 2
+    f1 = open(filename,'rt')
     text = f1.read()
     #remove comments
-    text = re.sub(r'(?m)^%+.*$','',text)
-    text = re.sub(r"(?m)([^\\])\%+.*?$",r'\1',text)
+    text = re.sub(r'(?m)^%+.*$','',text) #remove all comments at beginning of lines
+    text = re.sub(r"(?m)([^\\])\%+.*?$",r'\1',text) #remove all remaining comments
     text = re.sub(r'\\begin\{comment\}.*?\\end\{comment\}','',text,re.DOTALL)
     #series of regex expressions
     a = re.findall(r'\\begin\{equation\}(.*?)\\end\{equation\}',text,re.DOTALL)
