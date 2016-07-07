@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar ns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+    <element name="feed">
+      <ref name="link"/>
+      <ref name="title"/>
+      <ref name="id"/>
+      <ref name="updated"/>
+      <element name="opensearch:totalResults">
+        <data type="integer"/>
+      </element>
+      <element name="opensearch:startIndex">
+        <data type="integer"/>
+      </element>
+      <element name="opensearch:itemsPerPage">
+        <data type="integer"/>
+      </element>
+      <element name="entry">
+        <ref name="id"/>
+        <ref name="updated"/>
+        <element name="published">
+          <data type="NMTOKEN"/>
+        </element>
+        <ref name="title"/>
+        <element name="summary">
+          <text/>
+        </element>
+        <oneOrMore>
+          <element name="author">
+            <element name="name">
+              <text/>
+            </element>
+          </element>
+        </oneOrMore>
+        <element name="arxiv:comment">
+          <text/>
+        </element>
+        <oneOrMore>
+          <ref name="link"/>
+        </oneOrMore>
+        <element name="arxiv:primary_category">
+          <attribute name="scheme">
+            <data type="anyURI"/>
+          </attribute>
+          <attribute name="term">
+            <data type="NCName"/>
+          </attribute>
+        </element>
+        <element name="category">
+          <attribute name="scheme">
+            <data type="anyURI"/>
+          </attribute>
+          <attribute name="term">
+            <data type="NCName"/>
+          </attribute>
+        </element>
+      </element>
+    </element>
+  </start>
+  <define name="link">
+    <element name="link">
+      <attribute name="href">
+        <data type="anyURI"/>
+      </attribute>
+      <attribute name="rel">
+        <data type="NCName"/>
+      </attribute>
+      <optional>
+        <attribute name="title">
+          <data type="NCName"/>
+        </attribute>
+      </optional>
+      <attribute name="type"/>
+    </element>
+  </define>
+  <define name="title">
+    <element name="title">
+      <optional>
+        <attribute name="type">
+          <data type="NCName"/>
+        </attribute>
+      </optional>
+      <text/>
+    </element>
+  </define>
+  <define name="id">
+    <element name="id">
+      <data type="anyURI"/>
+    </element>
+  </define>
+  <define name="updated">
+    <element name="updated">
+      <data type="NMTOKEN"/>
+    </element>
+  </define>
+</grammar>

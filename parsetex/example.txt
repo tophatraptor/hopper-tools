@@ -1,0 +1,7 @@
+% testing %
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%12345 OTHER LINE
+
+%12345 other line
+
+$EXAMPLE$
