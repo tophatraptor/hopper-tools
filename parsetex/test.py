@@ -42,18 +42,27 @@ m = re.findall(r'\\\((.*?)\\\)',text,re.DOTALL)
 
 net = [a,b,c,d,e,f,g,h,l,m]
 
-for x in net:
-    print(len(x))
 
 
-total = a+b+c+d+e+f+g+h+m
+total = a+b+c+d+e+f+g+h+l+m
 total = map(strip,total)
 print(len(total))
-for x in total:
-    print(type(x) is str)
 cdelim = "CUSTOMDELIMITERHERE"
 
-newtext = re.sub(r'[^\\]\$|\\\(|\\\)',cdelim,newtext)
+newtext = text
+
+newtext = re.sub(r'(?s)\\begin\{equation\}(.*?)\\end\{equation\}',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\\begin\{multline\}(.*?)\\end\{multline\}',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\\begin\{gather\}(.*?)\\end\{gather\}',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\\begin\{align\}(.*?)\\end\{align\}',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\\begin\{math\}(.*?)\\end\{math\}',cdelim + r'\1' + cdelim,newtext)
+
+newtext = re.sub(r'(?s)[^\\]\\\[(.*?)\\\]',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\$\$([^\^].*?)\$\$',cdelim + r'\1' + cdelim,newtext)
+
+newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
+newtext = re.sub(r'(?s)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
 
 a = newtext.split(cdelim)
 a = map(strip,a)
@@ -62,15 +71,17 @@ print("HERE WE GO")
 
 count = 0
 for x in a:
-    print("EVALUATING")
-    print(x)
     if x in total:
-        print("FOUND MATCH")
-        print(x)
         count+=1
-    if x in l:
-        print("WTF")
+    else:
+        print("DELIM")
+        print(x)
 print("Expected: {}\nActual: {}".format(len(total),count))
+
+
+for x in net:
+    print(len(x))
+
 exit()
 f1 = open('1506/1506.07597.tex')
 
