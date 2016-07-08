@@ -19,70 +19,82 @@ class equation:
         self.prevsenttoks = []
         self.nextsenttoks = []
 
-f1 = open('1506/1506.07597.tex')
+path = '1506/'
 
-text = f1.read()
+filelist= glob.glob(os.path.join(path,'*.tex'))
 
-text = re.sub(r'(?m)^%+.*$','',text)
-text = re.sub(r"(?m)([^\\])\%+.*?$",r'\1',text)
-text = re.sub(r'\\begin\{comment\}.*?\\end\{comment\}','',text,re.DOTALL)
-#series of regex expressions
-a = re.findall(r'\\begin\{equation\}(.*?)\\end\{equation\}',text,re.DOTALL)
-b = re.findall(r'\\begin\{multline\}(.*?)\\end\{multline\}',text,re.DOTALL)
-c = re.findall(r'\\begin\{gather\}(.*?)\\end\{gather\}',text,re.DOTALL)
-d = re.findall(r'\\begin\{align\}(.*?)\\end\{align\}',text,re.DOTALL)
-e = re.findall(r'\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',text,re.DOTALL)
-f = re.findall(r'\\begin\{math\}(.*?)\\end\{math\}',text,re.DOTALL)
-g = re.findall(r'[^\\]\\\[(.*?)\\\]',text,re.DOTALL)
-h = re.findall(r'\$\$([^\^].*?)\$\$',text,re.DOTALL)
+corr = 0
+wrong = 0
 
-l = re.findall(r'[^\\]\$(.*?)\$',text,re.DOTALL)
-m = re.findall(r'\\\((.*?)\\\)',text,re.DOTALL)
+for filename in filelist:
+    f1 = open(filename)
 
-net = [a,b,c,d,e,f,g,h,l,m]
+    text = f1.read()
 
-total = a+b+c+d+e+f+g+h+l+m
-total = map(strip,total)
-print(len(total))
-cdelim = "CUSTOMDELIMITERHERE"
+    text = re.sub(r'(?m)^%+.*$','',text)
+    text = re.sub(r"(?m)([^\\])\%+.*?$",r'\1',text)
+    text = re.sub(r'\\begin\{comment\}.*?\\end\{comment\}','',text,re.DOTALL)
+    #series of regex expressions
+    a = re.findall(r'\\begin\{equation\}(.*?)\\end\{equation\}',text,re.DOTALL)
+    b = re.findall(r'\\begin\{multline\}(.*?)\\end\{multline\}',text,re.DOTALL)
+    c = re.findall(r'\\begin\{gather\}(.*?)\\end\{gather\}',text,re.DOTALL)
+    d = re.findall(r'\\begin\{align\}(.*?)\\end\{align\}',text,re.DOTALL)
+    e = re.findall(r'\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',text,re.DOTALL)
+    f = re.findall(r'\\begin\{math\}(.*?)\\end\{math\}',text,re.DOTALL)
+    g = re.findall(r'[^\\]\\\[(.*?)\\\]',text,re.DOTALL)
+    h = re.findall(r'\$\$([^\^].*?)\$\$',text,re.DOTALL)
 
-newtext = text
+    l = re.findall(r'[^\\]\$(.*?)\$',text,re.DOTALL)
+    m = re.findall(r'\\\((.*?)\\\)',text,re.DOTALL)
 
-newtext = re.sub(r'(?s)\\begin\{equation\}(.*?)\\end\{equation\}',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\\begin\{multline\}(.*?)\\end\{multline\}',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\\begin\{gather\}(.*?)\\end\{gather\}',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\\begin\{align\}(.*?)\\end\{align\}',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\\begin\{math\}(.*?)\\end\{math\}',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)[^\\]\\\[(.*?)\\\]',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\$\$([^\^].*?)\$\$',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
-newtext = re.sub(r'(?s)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
+    net = [a,b,c,d,e,f,g,h,l,m]
+    netcount = [0] * len(net)
 
-a = newtext.split(cdelim)
-a = map(strip,a)
+    total = a+b+c+d+e+f+g+h+l+m
+    total = map(strip,total)
+    print(len(total))
+    cdelim = "CUSTOMDELIMITERHERE"
 
-print("HERE WE GO")
+    newtext = text
 
-for i in range(len(a)):
-    if a[i] in total:
-        a[i] = equation(a[i])
-        print(a[i].text)
+    newtext = re.sub(r'(?s)\\begin\{equation\}(.*?)\\end\{equation\}',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)\\begin\{multline\}(.*?)\\end\{multline\}',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)\\begin\{gather\}(.*?)\\end\{gather\}',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)\\begin\{align\}(.*?)\\end\{align\}',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)\\begin\{flalign\*\}(.*?)\\end\{flalign\*\}',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)\\begin\{math\}(.*?)\\end\{math\}',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)[^\\]\\\[(.*?)\\\]',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)\$\$([^\^].*?)\$\$',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
+    newtext = re.sub(r'(?s)(?m)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
 
-# count = 0
+    a = newtext.split(cdelim)
+    a = map(strip,a)
 
-#
-# for x in a:
-#     if x in total:
-#         count+=1
-#     else:
-#         print("DELIM")
-#         print(x)
-# print("Expected: {}\nActual: {}".format(len(total),count))
+    count = 0
 
+    for i in range(len(a)):
+        if a[i] in total:
+            for z in range(len(netcount)):
+                if a[i] in net[z]:
+                    netcount[z] += 1
+                    print(netcount)
+            a[i] = equation(a[i])
+            #print(a[i].text)
+            count+=1
 
-for x in net:
-    print(len(x))
+    if(len(total)!=count):
+        print("Expected: {}\nActual: {}".format(len(total),count))
+        print(filename)
+        for i in range(len(net)):
+            print("{} {}".format(netcount[i], len(net[i])))
+        exit()
+        wrong+=1
+    else:
+        corr+=1
+
+print("Wrong: ",wrong)
+print("Correct: ",corr)
 
 exit()
 f1 = open('1506/1506.07597.tex')
