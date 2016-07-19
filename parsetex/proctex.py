@@ -11,6 +11,8 @@ import matplotlib.pyplot as pl #used to plot graphs
 import multiprocessing as mp #drastic speedups when implemented on an i7-4710HQ
 import heapq #to find n largest elements in makegraph
 import pickle #serializing to/from disk
+from nltk.tokenize import word_tokenize, sent_tokenize
+import gc
 
 #CLASSES
 
@@ -23,14 +25,38 @@ class equation:
         self.nextsent = ""
         self.prevsenttoks = []
         self.nextsenttoks = []
+        #pst & nst generated with nltk
+
+    def gentokens():
+        self.prevsenttoks = word_tokenize(self.prevsent)
+        self.nextsenttoks = word_tokenize(self.nextsent)
 
 class document:
-    def __init__(self, fname):
-        self.name = fname #[:-4] - for tex, may not need it
+    def __init__(self, fname,textarray):
+        self.name = fname
+        self.array = textarray
+
+    def get_equations(self):
+        ret = []
+        for item in self.array:
+            if type(item) is equation:
+                ret.append(item)
+        return(ret)
+
 
 class archive:
-    def __init__(self,indir):
-        self.dir = indir
+    def __init__(self,directory_name,dictionary):
+        self.dir = directory_name
+        self.docdict = dictionary
+    def save(self):
+        print(self.dir)
+        outfilepath = self.dir + ".pkl"
+        if os.path.isfile(outfilepath):
+            outfile = open(outfilepath)
+        else:
+            outfile = open(outfilepath,'w+')
+        pickle.dump(self,outfile)
+        outfile.close()
 
 
 def strip (param):
@@ -63,6 +89,7 @@ def proc(instr):
 
 #makes a dictionary of counted values
 def makedict(filename):
+    procname = re.findall(r'\/([0-9.]*.tex)',filename)[0]
     f1 = open(filename,'rt')
     text = f1.read()
     #remove comments
@@ -100,14 +127,13 @@ def makedict(filename):
     for x in finds:
         for item in x:
             #match regex for mathematical token
-            found = re.findall(r'\\\w+',item)
+            found = re.findall(r'\\\w+|d[a-z]|[^\\A-Za-z](d[\^]?[0-9]?[[:space:]]?[a-z])|[a-zA-z]\([a-zA-z]\)',item)
+            map(strip,found)
             count(found,countdict)
 
     total = a+b+c+d+e+f+g+h+l+m
     total = map(strip,total)
-    print(len(total))
-    cdelim = "CUSTOMDELIMITERHERE"
-
+    cdelim = " CUSTOMDELIMITERHERE "
     newtext = text
 
     newtext = re.sub(r'(?s)\\begin\{equation\}(.*?)\\end\{equation\}',cdelim + r'\1' + cdelim,newtext)
@@ -118,22 +144,15 @@ def makedict(filename):
     newtext = re.sub(r'(?s)\\begin\{math\}(.*?)\\end\{math\}',cdelim + r'\1' + cdelim,newtext)
     newtext = re.sub(r'(?s)[^\\]\\\[(.*?)\\\]',cdelim + r'\1' + cdelim,newtext)
     newtext = re.sub(r'(?s)\$\$([^\^].*?)\$\$',cdelim + r'\1' + cdelim,newtext)
-    newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
-    newtext = re.sub(r'(?s)(?m)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
-
-    a = newtext.split(cdelim)
-    a = map(strip,a)
-    total = a+b+c+d+e+f+g+h+l+m
-    for i in range(len(a)):
-        if a[i] in total:
-            a[i] = equation(a[i])
-            #print(a[i].text)
-        else:
-            print(a[i])
-
-    exit()
-
-    return countdict
+    # newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
+    # newtext = re.sub(r'(?s)(?m)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
+    textlist = newtext.split(cdelim)
+    textlist = map(strip,textlist)
+    for i in range(len(textlist)):
+        if textlist[i] in total:
+            textlist[i] = equation(textlist[i])
+    newdoc = document(procname,textlist)
+    return (countdict,newdoc)
 
     #Use Matplotlib to plot results
     #takes one argument (necessary for pool.map)
@@ -176,7 +195,6 @@ def makegraph(inputstr):
     pl.savefig(outfile)
     print("Generated histogram for category: {}".format(fname))
 
-
 def main():
     #default path to directory with tex files
     path = '1506/'
@@ -187,13 +205,15 @@ def main():
         if not os.path.isdir(path):
             print("Error: passed parameter is not a directory")
             sys.exit()
+
     #per getarxivdatav2, the metadata for tex files in a folder
     #should be in a .txt file of the same name
     metadata = path[:-1] + '.txt'
     #read in data
     #remove general subcategories
     #initialize number of threads to the number of cpu cores
-    #pool = mp.Pool(processes=mp.cpu_count())
+    pool = mp.Pool(processes=mp.cpu_count())
+    print("Initialized {} threads".format(mp.cpu_count()))
     #error handling for missing metadata file
     if not os.path.isfile(metadata):
         print("Error: file not found. Make sure you've entered the correct directory AND have run getarxivdatav2.py for said directory.")
@@ -204,7 +224,6 @@ def main():
     print("Read in file metadata.")
     #each line of the form 'filename.tex' 'category'
     #this changes it to just 'filename' and 'category'
-    #lines = pool.map(proc,lines)
     lines = map(proc,lines)
     #dictionary of categories
     #keys are category names
@@ -212,7 +231,6 @@ def main():
     categories = {}
     #dictionary of filenames and their associated categories
     fnamedict = {}
-
     #populate the respective dictionaries
     for x in lines:
         if x[1] not in categories:
@@ -226,8 +244,9 @@ def main():
     print("Getting token counts of files...")
     #filedictlist is the result of makedict mapped over each filename
     #filelist[0] corresponds to filedictlist[0]
-    #filedictlist = pool.map(makedict,filelist)
-    filedictlist = map(makedict,filelist)
+    mergedlist = map(makedict,filelist)
+    filedictlist, doclist = zip(*mergedlist)
+    dirarchive = archive(path[:-1],{f.name:f for f in doclist})
     #iterate over filelist & filedictlist
     #generate count dictionary for that file
     #merge with count dictionary for the file's category
@@ -258,11 +277,12 @@ def main():
     #this is circumventable by generating tuples of various input values to process
     inputvar = zip(categories.values(),categories.keys(),[graphpath]*tot)
     #multithreaded map of makegraph function
-    #pool.map(makegraph,inputvar)
     map(makegraph,inputvar)
     #handles closing of multiple processes
-    # pool.close()
-    # pool.join()
+    print(sys.getsizeof(dirarchive))
+    #dirarchive.save()
+    pool.close()
+    pool.join()
 
 if __name__ == '__main__':
     main()

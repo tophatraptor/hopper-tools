@@ -12,24 +12,6 @@ import multiprocessing as mp #drastic speedups when implemented on an i7-4710HQ
 import heapq #to find n largest elements in makegraph
 import pickle #serializing to/from disk
 
-
-class equation:
-    def __init__(self,eqtext, desig = 'latex'):
-        self.text = eqtext
-        self.type = desig
-        self.prevsent = ""
-        self.nextsent = ""
-        self.prevsenttoks = []
-        self.nextsenttoks = []
-
-class document:
-    def __init__(self, fname):
-        self.name = fname #[:-4] - for tex, may not need it
-
-class archive:
-    def __init__(self,indir):
-        self.dir = indir
-
 #iterates over a list of found tokens, and increments
 #dictionary token count, or initializes it to zero
 def count(found,countdict):
@@ -75,9 +57,6 @@ def makedict(filename):
     #that should never be the case
     g = re.findall(r'[^\\]\\\[(.*?)\\\]',text,re.DOTALL)
     h = re.findall(r'\$\$([^\^].*?)\$\$',text,re.DOTALL)
-    if len(h)>0:
-        print(filename)
-        print(h[0])
 
     #tabular regex matching
     #i = re.findall(r'\\begin\{table\*\}(.*?)\\end\{table\*\}', text, re.DOTALL)
@@ -158,7 +137,7 @@ def main():
     #read in data
     #remove general subcategories
     #initialize number of threads to the number of cpu cores
-    #pool = mp.Pool(processes=mp.cpu_count())
+    pool = mp.Pool(processes=mp.cpu_count())
     #error handling for missing metadata file
     if not os.path.isfile(metadata):
         print("Error: file not found. Make sure you've entered the correct directory AND have run getarxivdatav2.py for said directory.")
@@ -170,7 +149,7 @@ def main():
     #each line of the form 'filename.tex' 'category'
     #this changes it to just 'filename' and 'category'
     #lines = pool.map(proc,lines)
-    lines = map(proc,lines)
+    lines = pool.map(proc,lines)
     #dictionary of categories
     #keys are category names
     #values are count dictionaries of tokens in papers of the category
@@ -192,7 +171,7 @@ def main():
     #filedictlist is the result of makedict mapped over each filename
     #filelist[0] corresponds to filedictlist[0]
     #filedictlist = pool.map(makedict,filelist)
-    filedictlist = map(makedict,filelist)
+    filedictlist = pool.map(makedict,filelist)
     #iterate over filelist & filedictlist
     #generate count dictionary for that file
     #merge with count dictionary for the file's category
@@ -224,7 +203,7 @@ def main():
     inputvar = zip(categories.values(),categories.keys(),[graphpath]*tot)
     #multithreaded map of makegraph function
     #pool.map(makegraph,inputvar)
-    map(makegraph,inputvar)
+    pool.map(makegraph,inputvar)
     #handles closing of multiple processes
     # pool.close()
     # pool.join()
