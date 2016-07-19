@@ -5,3 +5,7 @@
 %12345 other line
 
 $EXAMPLE$
+
+$$EXAMPLE2$$
+
+a % is bad news
