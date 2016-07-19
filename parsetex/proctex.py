@@ -257,7 +257,7 @@ def main():
     for index, item in enumerate(filelist):
         cat = fnamedict[os.path.basename(filelist[index])]
         merge(filedictlist[index],categories[cat])
-        #merge counts with overall count dictionary
+        #merge category counts with overall count dictionary
         merge(filedictlist[index],totdict)
     #add the total dictionary to categories for graph generation
     categories['overall'] = totdict
