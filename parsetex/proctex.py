@@ -90,7 +90,7 @@ def proc(instr):
 #makes a dictionary of counted values
 def makedict(filename):
     procname = re.findall(r'\/([0-9.]*.tex)',filename)[0]
-    f1 = open(filename,'rt')
+    f1 = open('example.txt','rt')
     text = f1.read()
     #remove comments
     text = re.sub(r'(?m)^%+.*$','',text) #remove all comments at beginning of lines
@@ -119,7 +119,7 @@ def makedict(filename):
 
     #finds is a list of lists of found expressions
     #currently does not include the tabular regex
-    finds = [a,b,c,d,e,f,g,h,l,m]
+    finds = [a,b,c,d,e,f,g,h]
     countdict = {}
 
     #every re.findall command generates a list of tokens that match the expression
@@ -131,11 +131,10 @@ def makedict(filename):
             map(strip,found)
             count(found,countdict)
 
-    total = a+b+c+d+e+f+g+h+l+m
+    total = a+b+c+d+e+f+g+h
     total = map(strip,total)
     cdelim = " CUSTOMDELIMITERHERE "
     newtext = text
-
     newtext = re.sub(r'(?s)\\begin\{equation\}(.*?)\\end\{equation\}',cdelim + r'\1' + cdelim,newtext)
     newtext = re.sub(r'(?s)\\begin\{multline\}(.*?)\\end\{multline\}',cdelim + r'\1' + cdelim,newtext)
     newtext = re.sub(r'(?s)\\begin\{gather\}(.*?)\\end\{gather\}',cdelim + r'\1' + cdelim,newtext)
@@ -144,14 +143,17 @@ def makedict(filename):
     newtext = re.sub(r'(?s)\\begin\{math\}(.*?)\\end\{math\}',cdelim + r'\1' + cdelim,newtext)
     newtext = re.sub(r'(?s)[^\\]\\\[(.*?)\\\]',cdelim + r'\1' + cdelim,newtext)
     newtext = re.sub(r'(?s)\$\$([^\^].*?)\$\$',cdelim + r'\1' + cdelim,newtext)
-    # newtext = re.sub(r'(?s)[^\\]\$(.*?)\$',cdelim + r'\1' + cdelim,newtext)
-    # newtext = re.sub(r'(?s)(?m)\\\((.*?)\\\)',cdelim + r'\1' + cdelim,newtext)
+    # dispeqs = re.findall(r'(?s) CUSTOMDELIMITERHERE (.*?) CUSTOMDELIMITERHERE',newtext,re.DOTALL)
+    dispeqs = re.findall(r'(?s)' + cdelim + r'(.*?)' + cdelim,newtext)
+    map(strip,dispeqs)
     textlist = newtext.split(cdelim)
     textlist = map(strip,textlist)
     for i in range(len(textlist)):
-        if textlist[i] in total:
+        if textlist[i] in dispeqs:
             textlist[i] = equation(textlist[i])
     newdoc = document(procname,textlist)
+    print(newdoc)
+    exit()
     return (countdict,newdoc)
 
     #Use Matplotlib to plot results
@@ -161,39 +163,6 @@ def makedict(filename):
     #Use Matplotlib to plot results
     #takes one argument (necessary for pool.map)
     #tuple of arguments lets us pass multiple arguments
-def makegraph(inputstr):
-    indict, fname, outdir = inputstr
-    countdict = {}
-    #graphs will display the first disptoks most common tokens
-    disptoks = 20
-    #plotting all values takes a relatively long time
-    #instead, will plot the 20 most frequently occurring tokens
-    #sorted in descending order by frequency
-    #returns the 20th largest value, and sets that as the cutoff
-    limit = min(heapq.nlargest(disptoks,indict.values()))
-    #assemble a dictionary of only tokens with frequencies higher than the cutoff
-    for x in indict:
-        if(indict[x]>limit):
-            countdict[x] = indict[x]
-    #specify outfile
-    outfile = outdir + fname + '.png'
-    #generate a 1600x800 image for each graph
-    pl.figure(figsize=(16,8),dpi=100)
-    pl.axis('tight')
-    X = np.arange(len(countdict))
-    #turn the new dictionary into a list of tuples, sorted by count value
-    items = sorted(countdict.items(), key=lambda x:x[1], reverse=True)
-    xvals, yvals = zip(*items)
-    pl.bar(X, yvals, align='center', width=0.5)
-    pl.xticks(X, xvals, rotation='vertical')
-    #Setting title of the generated graph
-    pl.title(str(disptoks) + " most common tokens in: " + fname)
-    ymax = max(countdict.values()) + 1
-    pl.ylim(0, ymax)
-    #saves the image to outfile
-    #file name has the format 'categoryname.png'
-    pl.savefig(outfile)
-    print("Generated histogram for category: {}".format(fname))
 
 def main():
     #default path to directory with tex files
@@ -262,25 +231,7 @@ def main():
     #add the total dictionary to categories for graph generation
     categories['overall'] = totdict
     print("Categorical token counting complete.")
-    #produce graphs
-    print("Generating graphs...")
-    #helper variable to avoid recalculation & display progress
-    tot = len(categories.keys())
-    graphpath = path[:-1]+'_graphs/'
-    #if the directory doesn't already exist, generate it
-    if not os.path.exists(graphpath):
-        os.makedirs(graphpath)
-
-    #generate graphs
-    #zip together the corresponding elements of categories.values, categories.keys, and the constant graphpath
-    #pool.map can only pass one argument to the function it maps
-    #this is circumventable by generating tuples of various input values to process
-    inputvar = zip(categories.values(),categories.keys(),[graphpath]*tot)
-    #multithreaded map of makegraph function
-    map(makegraph,inputvar)
     #handles closing of multiple processes
-    print(sys.getsizeof(dirarchive))
-    #dirarchive.save()
     pool.close()
     pool.join()
 

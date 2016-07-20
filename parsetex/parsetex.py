@@ -13,8 +13,6 @@ import heapq #to find n largest elements in makegraph
 import pickle #serializing to/from disk
 
 
-
-
 #iterates over a list of found tokens, and increments
 #dictionary token count, or initializes it to zero
 def count(found,countdict):
